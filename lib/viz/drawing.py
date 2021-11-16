@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 
-from lib.utils.processing import suggest, similar
+from lib.viz.parameters import DrawingParams
 
 # ----------------------------------------
 
@@ -34,10 +34,9 @@ class LoggingLevel(int, Enum):
 
 # ----------------------------------------
 
-# def convert_to_PIL(img)
 def convert_to_PIL(func):
 
-    def Inner(obj, *args, **kwargs):
+    def wrapper(obj, *args, **kwargs):
 
         if isinstance(args[0], np.ndarray):
             newimg = Image.fromarray(args[0])
@@ -50,208 +49,9 @@ def convert_to_PIL(func):
         else:
             return result
 
-    return Inner
-
+    return wrapper
 
 # ------------------
-
-class Logger:
-
-    def __init__(self, level = LoggingLevel.WARNING):
-
-        self.header_styles = ["--- DEBUG: {} ---",
-                              "--- INFO: {} ---",
-                              "--! WARNING: {} ---",
-                              "-!! ERROR: {} ---",
-                              "!!! CRITICAL: {} ---"] 
-
-        self.logging_level = level
-
-    def header_styles(self, styles = []):
-
-        if isinstance(styles, list):
-
-            if len(list) == 5:
-                print("assisgning")
-
-                self.header_styles = styles
-            else:
-
-                print("List long less than 5")
-
-        elif isinstance(styles, str):
-
-            print("Asssignign")
-
-            self.header_styles = [styles] * len(self.header_styles)
-
-        else:
-
-            print("ERROR NOT ASSIGNIGN")
-            
-
-    def set_logging_level(self, level):
-
-        self.logging_level = level
-
-    def display(self, min_level, text):
-
-        if min_level < self.logging_level:
-            return
-
-        print(self.header_styles[self.logging_level-1].format(text))
-
-    def debug(self, message):
-
-        self.display(LoggingLevel.INFO, message)
-
-    def info(self, message):
-
-        self.display(LoggingLevel.INFO, message)
-
-    def warning(self, message):
-
-        self.display(LoggingLevel.WARNING, message)
-
-    def error(self, message):
-
-        self.display(LoggingLevel.ERROR, message)
-
-    def critical(self, message):
-
-        self.display(LoggingLevel.CRIICAL, message)
-
-
-class DrawingParams:
-    
-    def __init__(self, logger, kwargs):
-
-        # self._color = colors[drawing_color]
-        # self._bg_color = None
-        # self._box_color = None
-        # self._alpha = 1.0
-        # self._font_size = 12
-        # self._thickness = thickness if thickness is not None else 1 
-        # self._linestyle = linestyle if linestyle is not None else '-'
-
-        # self.anchor_preferred = Positions.TOPLEFT
-        # self.anchor_force = False
-
-        self._line_color = None
-        self._line_thickness = None 
-        self._line_style = None
-
-        self._text_color = None
-        self._text_fill_color = None
-        self._text_font_size = None
-        self._text_font = None
-
-        self._points_color = None
-        self._points_size = None
-        self._points_outline_color = None
-        self._points_outline_thickness = None
-
-        self._box_fill_color = None
-        self._box_text_anchor = None
-        self._box_text_inside = None
-
-        self._arrow_color = None
-        self._arrow_thickness = None
-        self._arrow_angle = None
-        self._arrow_fill_color = None
-
-        self._mask_color = None
-
-        self.logger = logger
-
-        self.initialize(**kwargs)
-
-
-    def initialize(self, **kwargs):
-
-        for entry in kwargs.items():
-            attrname = f"_{entry[0].replace(' ', '_')}"
-            if hasattr(self, attrname):
-                setattr(self, attrname, entry[1])
-            else:
-                self.logger.warning(f"field {entry[0]} not found")
-                aaa = suggest(self.__dict__.keys(), entry[0], similar)
-                aaa = [a.replace('_', ' ').strip() for a in aaa]
-                self.logger.warning(f"maybe you meant: {', '.join(aaa)}")
-
-
-    def update(self, kwargs):
-
-        self.initialize(**kwargs)
-
-
-    # @property
-    # def color(self, primitive): 
-    #     return self._color
-
-    # @color.setter
-    # def color(self, name):
-
-    #     if name in colors:
-    #         self._color = colors[name]
-    #     else:
-    #         print("not found, kept old ")
-
-    # @property
-    # def bg_color(self): 
-    #     return self._bg_color
-
-    # @bg_color.setter
-    # def bg_color(self, name):
-
-    #     if name in colors:
-    #         self._bg_color = colors[name]
-    #     else:
-    #         print("not found, kept old ")
-
-    # @property
-    # def box_color(self): 
-    #     return self._box_color
-
-    # @box_color.setter
-    # def box_color(self, name):
-
-    #     if name in colors:
-    #         self._box_color = colors[name]
-    #     else:
-    #         print("not found, kept old ")
-
-    # @property
-    # def thickness(self): 
-    #     return self._thickness
-
-    # @thickness.setter
-    # def thickness(self, value):
-
-    #     if isinstance(value, int):
-    #         self._thickness = value
-    #     else:
-    #         raise ValueError("value error")
-
-    # @property
-    # def font_size(self): 
-    #     return self._font_size
-
-    # @font_size.setter
-    # def font_size(self, value):
-
-    #     if isinstance(value, int):
-    #         self._font_size = value
-    #     else:
-    #         raise ValueError("value error")
-
-    def dump_style(self, filename):
-
-        pass
-    
-    def load_style(self, filename):
-
-        pass
 
 class Drawer:
 
@@ -304,6 +104,8 @@ class Drawer:
             if style_name is not None:
                 self.cur_style = style_name
                 
+            yield None
+
         finally:
             self.cur_style = previous_style
 
@@ -381,24 +183,44 @@ class Drawer:
     @convert_to_PIL
     def box(self, image, point_tl, point_br, font_size = 12, margin = 5, position = "top left", text_show = None, inner = False, normalized = False, apply_style = None):
 
+        image = image.convert("RGBA")
+
         canvas = ImageDraw.Draw(image)
 
-        # with self.temp_style(apply_style):
-        canvas.rectangle(list(point_tl + point_br), fill=self.style._box_fill_color, outline=self.style._line_color, width=self.style._line_thickness)
+        with self.temp_style(apply_style):
 
-        if text_show is not None:
+            canvas.rectangle(list(point_tl + point_br), fill=self.style._box_fill_color, outline=self.style._line_color, width=self.style._line_thickness)
 
-            font = ImageFont.truetype("arial", font_size)
+            if text_show is not None:
 
-            text_size = font.getsize(text_show)
-            prompt_size = (text_size[0]+margin, text_size[1]+margin)
-            prompt_img = Image.new('RGBA', prompt_size, self.style._text_fill_color)
-            prompt_draw = ImageDraw.Draw(prompt_img)
-            half_margin = margin // 2
-            prompt_draw.text((half_margin, half_margin), text_show, font=font, fill=self.style._text_color)
-            coords = self.get_anchor_coordinates(image.size, prompt_img.size, list(point_tl + point_br), position, inner)
-            image.paste(prompt_img, coords)
+                # font = ImageFont.truetype("arial", font_size)
 
+                # text_size = font.getsize(text_show)
+                # prompt_size = (text_size[0]+margin, text_size[1]+margin)
+                # prompt_img = Image.new('RGBA', prompt_size, self.style._text_fill_color)
+                # prompt_draw = ImageDraw.Draw(prompt_img)
+                # half_margin = margin // 2
+                # prompt_draw.text((half_margin, half_margin), text_show, font=font, fill=self.style._text_color)
+                # coords = self.get_anchor_coordinates(image.size, prompt_img.size, list(point_tl + point_br), position, inner)
+                # image.paste(prompt_img, coords)
+
+                font = ImageFont.truetype("arial", font_size)
+
+                txt_image = Image.new('RGBA', image.size, (0,0,0,0))
+
+                prompt_draw = ImageDraw.Draw(txt_image)
+
+                text_size = font.getsize(text_show)
+                prompt_size = (text_size[0]+margin, text_size[1]+margin)
+                half_margin = margin // 2
+                coords = self.get_anchor_coordinates(image.size, prompt_size, list(point_tl + point_br), position, inner)
+
+                box_coords = [coords[0]-half_margin, coords[1]-half_margin, coords[0]+prompt_size[0], coords[1]+prompt_size[1]]
+                prompt_draw.rectangle(box_coords, fill=self.style._text_fill_color)
+
+                prompt_draw.text(coords, text_show, fill=self.style._text_color, font=font)
+
+                image = Image.alpha_composite(image, txt_image)    
 
         return image
 
@@ -437,16 +259,36 @@ class Drawer:
     @convert_to_PIL
     def text_anchor(self, image, margin = 20, font_size = 32, text_show = "empty", position = None, alignment = "bottom center", normalized = False, style = None):
 
+        # font = ImageFont.truetype("arial", font_size)
+
+        # text_size = font.getsize(text_show)
+        # prompt_size = (text_size[0]+margin, text_size[1]+margin)
+        # prompt_img = Image.new('RGBA', prompt_size, self.style._text_fill_color)
+        # prompt_draw = ImageDraw.Draw(prompt_img)
+        # half_margin = margin // 2
+        # prompt_draw.text((half_margin, half_margin), text_show, font=font, fill=self.style._text_color)
+        # coords = self.get_coordinates(image.size, prompt_img.size, alignment)
+        # image.paste(prompt_img, coords)
+
+
         font = ImageFont.truetype("arial", font_size)
+
+        txt_image = Image.new('RGBA', image.size, (0,0,0,0))
+
+        prompt_draw = ImageDraw.Draw(txt_image)
 
         text_size = font.getsize(text_show)
         prompt_size = (text_size[0]+margin, text_size[1]+margin)
-        prompt_img = Image.new('RGBA', prompt_size, self.style._text_fill_color)
-        prompt_draw = ImageDraw.Draw(prompt_img)
         half_margin = margin // 2
-        prompt_draw.text((half_margin, half_margin), text_show, font=font, fill=self.style._text_color)
-        coords = self.get_coordinates(image.size, prompt_img.size, alignment)
-        image.paste(prompt_img, coords)
+        # coords = self.get_anchor_coordinates(image.size, prompt_size, list(point_tl + point_br), position, inner)
+        coords = self.get_coordinates(image.size, prompt_size, alignment)
+
+        box_coords = [coords[0]-half_margin, coords[1]-half_margin, coords[0]+prompt_size[0], coords[1]+prompt_size[1]]
+        prompt_draw.rectangle(box_coords, fill=self.style._text_fill_color)
+
+        prompt_draw.text(coords, text_show, fill=self.style._text_color, font=font)
+
+        image = Image.alpha_composite(image, txt_image)    
 
         return image
 
