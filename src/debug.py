@@ -1,88 +1,101 @@
 
-from lib.viz.drawing import Drawer
+from lib.viz.drawing import Drawer, Logger, LoggingLevel
 from PIL import Image
 import numpy as np
 
-# --------------------------------------
 
+import os
+import sys
 
-# def deco(func):
-
-#     def Inner(obj, *args, **kwargs):
-
-#         # def wrapper(**kwargs):
- 
-#         print(kwargs)
-#         print("DEBUG:", obj._a)
-
-#         func(obj, **kwargs)
-
-#         print("DEBUG:", obj._a)
-             
-#         # return wrapper
-
-
-#     return Inner
-
-# class thisclass:
-
-#     def __init__(self):
-
-#         self._a = None
-#         self._b = None
-
-#     @deco
-#     def m(self, **kwargs):
-
-#         for entry in kwargs.items():
-#             attrname = f"_{entry[0]}"
-#             if hasattr(self, attrname):
-#                 setattr(self, attrname, entry[1])
-#             else:
-#                 print(f"field {entry[0]} not available")
+rootpath = os.path.join(os.path.dirname(__file__), '..')
+sys.path.append(rootpath)
 
 # --------------------------------------
 
+img = np.zeros((480,640,3), dtype=np.uint8)
 
+logger = Logger()
+drawer = Drawer(logger = logger)
 
-# item = thisclass()
+# --- STYLES SETUP
 
-# print(item._a, item._b)
-
-# # item.m(a = 4, b = 1)
-# item.m(**{"a": 4, "b": 1})
-
-# print(item._a, item._b)
-
-
-drawer = Drawer()
-
-my_style = {"line_color": "blue",
-            "box_fill_color": "white",
-            "line_thickness": 2}
+my_style = {"line color": "blue",
+            "box fill color": "white",
+            "line thickness": 3,
+            "text fill color": "blue",
+            "points color": "red",
+            "points outline color": "yellow",
+            "points outline thickness": 2, 
+            "points size": 5, 
+            "text color": "yellow"}
 
 drawer.add_style("prova", my_style)
 
-my_style = {"line_color": "red",
-            "box_fill_color": "yellow",
-            "line_thickness": 5}
+my_style = {"line color": "red",
+            "box fill color": None,
+            "line thickness": 5,
+            "text fill color": "red",
+            "text color": "white"}
 
 drawer.add_style("second", my_style)
 
-img = np.zeros((200,200,3), dtype=np.uint8)
+# --- DRAWING CALLS
 
 drawer.set_style("prova")
-img = drawer.box(img, (20,20), (50,50))
-
-# print("type(img):", type(img))
+img = drawer.box(img, (20,20), (70,70))
 
 drawer.set_style("second")
-drawer.return_numpy = True
+# drawer.return_numpy = True
 
-img = drawer.box(img, (35,35), (70,70), label = "a")
+img = drawer.box(img, (55,155), (210,310), text_show="dog", font_size=20)
+img = drawer.box(img, (335,5), (510,210), text_show="elephant", position="bottom right", font_size=20, inner=True)
+img = drawer.text_anchor(img, text_show = "tentative", alignment = "bottom center")
 
-# img = drawer.text(img, None, None, None)
+segments = [[(300,300),(550,420)], [(450, 420), (550, 100)]]
+img = drawer.segments(img, segments)
 
-# print("type(img):", type(img))
+drawer.set_style("prova")
+img = drawer.text_anchor(img, text_show = "2", alignment = "top right")
+
+points = [[120,320], [520,300]]
+points_labels = ["1", "2", ]
+img = drawer.keypoints(img, points, labels = points_labels)
+
+
+joints = [[350,150],
+          [400,100],
+          [450,150],
+          [400,250],
+          [365,300],
+          [435,300]]
+
+bones = [[0,1],
+         [1,2],
+         [1,3],
+         [3,4],
+         [3,5]]
+
+labels = ["lh", "head", "rh", "hip", "lf", "rf"]
+ 
+img = drawer.skeleton(img, joints = joints, bones = bones, labels = labels)
+
+points = [[180,50],
+          [250,50],
+          [300,120],
+          [220,70],
+          [200,120]]
+
+drawer.update_current_style({"line color": "green"})
+
+img = drawer.arrow(img, points = [[150, 250], [240, 240]])
+img = drawer.arrow(img, points = [[50, 300], [290, 290]])
+
+drawer.update_current_style({"line thickness": 6})
+
+img = drawer.polygon(img, points = points)
+
+drawer.update_current_style({"line thicknss": 6})
+
+# --- VISUALIZATION
 
 drawer.show(img)
