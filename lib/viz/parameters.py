@@ -7,17 +7,6 @@ class DrawingParams:
     
     def __init__(self, logger, kwargs):
 
-        # self._color = colors[drawing_color]
-        # self._bg_color = None
-        # self._box_color = None
-        # self._alpha = 1.0
-        # self._font_size = 12
-        # self._thickness = thickness if thickness is not None else 1 
-        # self._linestyle = linestyle if linestyle is not None else '-'
-
-        # self.anchor_preferred = Positions.TOPLEFT
-        # self.anchor_force = False
-
         self._line_color = None
         self._line_thickness = None 
         self._line_style = None
@@ -40,6 +29,8 @@ class DrawingParams:
         self._arrow_thickness = None
         self._arrow_angle = None
         self._arrow_fill_color = None
+
+        self._mask_color = None
 
         self._mask_color = None
 
@@ -70,9 +61,9 @@ class DrawingParams:
                 setattr(self, attrname, entry[1])
             else:
                 self.logger.warning(f"field {entry[0]} not found")
-                aaa = suggest(self.__dict__.keys(), entry[0], similar)
-                aaa = [a.replace('_', ' ').strip() for a in aaa]
-                self.logger.warning(f"maybe you meant: {', '.join(aaa)}")
+                candidates = suggest(self.__dict__.keys(), entry[0], similar)
+                candidates = [cand.replace('_', ' ').strip() for cand in candidates]
+                self.logger.warning(f"maybe you meant: {', '.join(candidates)}")
 
 
     def update(self, kwargs):
