@@ -348,6 +348,8 @@ class Drawer:
     @convert_to_PIL
     def text_anchor(self, image, margin = 20, font_size = None, text_show = "empty", position = None, alignment = "bottom center", normalized = False, apply_style = None):
 
+        image = image.convert("RGBA")
+
         with self.temp_style(apply_style):
 
             font = ImageFont.truetype("arial", font_size if font_size is not None else self.style._text_font_size)
@@ -364,6 +366,7 @@ class Drawer:
             prompt_draw.rectangle(box_coords, fill=self.style._text_fill_color)
             prompt_draw.text(coords, text_show, fill=self.style._text_color, font=font)
 
+        
         image = Image.alpha_composite(image, txt_image)    
 
         return image
