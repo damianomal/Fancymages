@@ -1,6 +1,6 @@
 
-from lib.viz.drawing import Drawer
-from lib.utils.logger import Logger
+from fancymages.viz.drawing import Drawer
+from fancymages.utils.logger import Logger
 
 import numpy as np
 import os

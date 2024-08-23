@@ -2,3 +2,5 @@ data/
 tmp/
 
 **/__pycache__
+build/*
+fancymages.egg-info/*

@@ -358,7 +358,10 @@ class Drawer:
 
             prompt_draw = ImageDraw.Draw(txt_image)
 
-            text_size = font.getsize(text_show)
+            left, top, right, bottom = font.getbbox(text_show)
+            text_size = right - left, bottom - top
+            # text_size = font.getsize(text_show)
+            
             prompt_size = (text_size[0], text_size[1])
 
             coords, box_coords = self.get_coordinates(image.size, prompt_size, alignment, margin)
